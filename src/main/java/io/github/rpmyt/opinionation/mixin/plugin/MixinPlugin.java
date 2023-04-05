@@ -1,6 +1,5 @@
 package io.github.rpmyt.opinionation.mixin.plugin;
 
-import io.github.rpmyt.opinionation.Opinionation;
 import net.minecraft.launchwrapper.Launch;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,12 +18,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static io.github.rpmyt.opinionation.mixin.plugin.TargetedMod.VANILLA;
 import static java.nio.file.Files.walk;
 
 public class MixinPlugin implements IMixinConfigPlugin {
 
-    private static final Logger LOG = LogManager.getLogger(Opinionation.MODID + " Mixins");
+    private static final Logger LOG = LogManager.getLogger("Opinionation's Mixins");
     private static final Path MODS_DIRECTORY_PATH = new File(Launch.minecraftHome, "mods/").toPath();
 
     @Override
@@ -53,7 +51,7 @@ public class MixinPlugin implements IMixinConfigPlugin {
         final boolean isDevelopmentEnvironment = (boolean) Launch.blackboard.get("fml.deobfuscatedEnvironment");
 
         List<TargetedMod> loadedMods = Arrays.stream(TargetedMod.values())
-                .filter(mod -> mod == VANILLA
+                .filter(mod -> mod == TargetedMod.VANILLA
                         || (mod.loadInDevelopment && isDevelopmentEnvironment)
                         || loadJarOf(mod))
                 .collect(Collectors.toList());

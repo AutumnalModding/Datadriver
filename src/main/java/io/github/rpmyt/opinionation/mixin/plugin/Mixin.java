@@ -3,9 +3,8 @@ package io.github.rpmyt.opinionation.mixin.plugin;
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
-
-import static io.github.rpmyt.opinionation.mixin.plugin.TargetedMod.*;
 
 public enum Mixin {
 
@@ -16,6 +15,12 @@ public enum Mixin {
     //
 
     // Replace with your own mixins:
+    COSMETICUNLOCKER("lotr.CosmeticUnlockerMixin", TargetedMod.LOTR),
+    WAYPOINTUNLOCKER("lotr.WaypointUnlockerMixin", TargetedMod.LOTR),
+    NEUTRALIFIER("lotr.NPCNeutralifierMixin", TargetedMod.LOTR),
+    COMBATYEETER("lotr.CombatYeeterMixin", TargetedMod.LOTR)
+
+    ;
 
     public final String mixinClass;
     public final List<TargetedMod> targetedMods;
@@ -37,12 +42,12 @@ public enum Mixin {
         return (side == Side.BOTH
                 || side == Side.SERVER && FMLLaunchHandler.side().isServer()
                 || side == Side.CLIENT && FMLLaunchHandler.side().isClient())
-                && loadedMods.containsAll(targetedMods);
+                && new HashSet<>(loadedMods).containsAll(targetedMods);
     }
 }
 
 enum Side {
     BOTH,
     CLIENT,
-    SERVER;
+    SERVER
 }

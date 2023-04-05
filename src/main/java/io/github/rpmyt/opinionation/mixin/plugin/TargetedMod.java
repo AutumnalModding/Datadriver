@@ -14,7 +14,10 @@ public enum TargetedMod {
 
     // Replace with your injected mods here, but always keep VANILLA:
     VANILLA("Minecraft", "unused", true),
-    LOTR("The Lord of the Rings Mod", "lotr", true);
+    LOTR("The Lord of the Rings Mod", "LOTRMod", true),
+    DRAGONAPI("DragonAPI", "DragonAPI", true)
+
+    ;
 
     public final String modName;
     public final String jarNamePrefixLowercase;
