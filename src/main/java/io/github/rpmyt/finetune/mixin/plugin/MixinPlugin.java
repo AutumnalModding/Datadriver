@@ -1,4 +1,4 @@
-package io.github.rpmyt.opinionation.mixin.plugin;
+package io.github.rpmyt.finetune.mixin.plugin;
 
 import net.minecraft.launchwrapper.Launch;
 import org.apache.logging.log4j.LogManager;

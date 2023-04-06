@@ -1,4 +1,4 @@
-package io.github.rpmyt.opinionation.mixin.plugin;
+package io.github.rpmyt.finetune.mixin.plugin;
 
 import com.google.common.io.Files;
 
@@ -14,8 +14,9 @@ public enum TargetedMod {
 
     // Replace with your injected mods here, but always keep VANILLA:
     VANILLA("Minecraft", "unused", true),
-    LOTR("The Lord of the Rings Mod", "LOTRMod", true),
-    DRAGONAPI("DragonAPI", "DragonAPI", true)
+    LOTR("The Lord of the Rings Mod", "LOTRMod", false),
+    THAUMCRAFT("Thaumcraft", "Thaumcraft", true),
+    BOTANIA("Botania", "Botania", true),
 
     ;
 

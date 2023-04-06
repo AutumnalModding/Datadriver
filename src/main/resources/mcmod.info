@@ -1,8 +1,8 @@
 [
 {
-  "modid": "opinionation",
-  "name": "Opinionation",
-  "description": "Opinionated tweaks and a couple bugfixes.",
+  "modid": "finetune",
+  "name": "Finetune",
+  "description": "Configurate ALL the things.",
   "version": "1.0",
   "mcversion": "1.7.10",
   "url": "",

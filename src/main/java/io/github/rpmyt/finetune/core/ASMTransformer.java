@@ -1,4 +1,4 @@
-package io.github.rpmyt.opinionation.core;
+package io.github.rpmyt.finetune.core;
 
 import cpw.mods.fml.common.Loader;
 import net.minecraft.launchwrapper.IClassTransformer;
@@ -16,6 +16,9 @@ public class ASMTransformer implements IClassTransformer {
 
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
+        if (name.contains("botania")) {
+            System.out.println(name);
+        }
         if (name.contains("LOTRClassTransformer")) {
             ClassNode node = new ClassNode(Opcodes.ASM5);
             ClassReader reader = new ClassReader(basicClass);

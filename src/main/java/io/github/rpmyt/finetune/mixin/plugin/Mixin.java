@@ -1,4 +1,4 @@
-package io.github.rpmyt.opinionation.mixin.plugin;
+package io.github.rpmyt.finetune.mixin.plugin;
 
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 
@@ -7,19 +7,16 @@ import java.util.HashSet;
 import java.util.List;
 
 public enum Mixin {
+    // LOTR
+    COSMETIC_UNLOCKER("lotr.CosmeticUnlockerMixin", TargetedMod.LOTR),
+    WAYPOINT_UNLOCKER("lotr.WaypointUnlockerMixin", TargetedMod.LOTR),
+    MAKE_NPCS_NEUTRAL("lotr.NPCNeutralifierMixin", TargetedMod.LOTR),
+    REMOVE_CUSTOM_COMBAT("lotr.CombatYeeterMixin", TargetedMod.LOTR),
 
-    //
-    // IMPORTANT: Do not make any references to any mod from this file. This file is loaded quite early on and if
-    // you refer to other mods you load them as well. The consequence is: You can't inject any previously loaded classes!
-    // Exception: Tags.java, as long as it is used for Strings only!
-    //
+    // Thaum
+    CHANGE_ELDRITCH_DAMAGE_CAP("thaumcraft.EldritchBossDamageCapMixin", TargetedMod.THAUMCRAFT),
 
-    // Replace with your own mixins:
-    COSMETICUNLOCKER("lotr.CosmeticUnlockerMixin", TargetedMod.LOTR),
-    WAYPOINTUNLOCKER("lotr.WaypointUnlockerMixin", TargetedMod.LOTR),
-    NEUTRALIFIER("lotr.NPCNeutralifierMixin", TargetedMod.LOTR),
-    COMBATYEETER("lotr.CombatYeeterMixin", TargetedMod.LOTR)
-
+    // Botania
     ;
 
     public final String mixinClass;

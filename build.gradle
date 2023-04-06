@@ -580,7 +580,8 @@ dependencies {
     }
 
     implementation files("mods/lotr.jar")
-    implementation files("mods/dragonapi.jar")
+    implementation files("mods/thaumcraft.jar")
+    implementation files("mods/botania.jar")
 }
 
 pluginManager.withPlugin('org.jetbrains.kotlin.kapt') {

@@ -1,6 +1,6 @@
-package io.github.rpmyt.opinionation.mixin.mixins.lotr;
+package io.github.rpmyt.finetune.mixin.mixins.lotr;
 
-import io.github.rpmyt.opinionation.Config;
+import io.github.rpmyt.finetune.FinetuneConfig;
 import lotr.common.world.map.LOTRWaypoint;
 import net.minecraft.entity.player.EntityPlayer;
 import org.spongepowered.asm.mixin.Mixin;
@@ -12,14 +12,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class WaypointUnlockerMixin {
     @Inject(method = "hasPlayerUnlocked", at = @At("HEAD"), cancellable = true, remap = false)
     public void unlockAll(EntityPlayer entityplayer, CallbackInfoReturnable<Boolean> cir) {
-        if (Config.LOTR.UNLOCK_WAYPOINTS) {
+        if (FinetuneConfig.LOTR.UNLOCK_WAYPOINTS) {
             cir.setReturnValue(true);
         }
     }
 
     @Inject(method = "isCompatibleAlignment", at = @At("HEAD"), cancellable = true, remap = false)
     public void noLocking(EntityPlayer entityplayer, CallbackInfoReturnable<Boolean> cir) {
-        if (Config.LOTR.NO_WAYPOINT_LOCKING) {
+        if (FinetuneConfig.LOTR.NO_WAYPOINT_LOCKING) {
             cir.setReturnValue(true);
         }
     }
