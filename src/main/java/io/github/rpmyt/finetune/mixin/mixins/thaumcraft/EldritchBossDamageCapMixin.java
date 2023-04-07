@@ -11,12 +11,12 @@ import thaumcraft.common.entities.monster.boss.EntityThaumcraftBoss;
 
 @Mixin(EntityThaumcraftBoss.class)
 public class EldritchBossDamageCapMixin {
-    @ModifyConstant(method = "func_70097_a", constant = @Constant(floatValue = 35.0F, ordinal = 0), remap = false)
+    @ModifyConstant(method = "attackEntityFrom", constant = @Constant(floatValue = 35.0F, ordinal = 0))
     private float changeDamageCap(float cap) {
         return FinetuneConfig.Thaumcraft.ELDRITCH_BOSS_DAMAGE_CAP;
     }
 
-    @ModifyConstant(method = "func_70097_a", constant = @Constant(floatValue = 35.0F, ordinal = 1), remap = false)
+    @ModifyConstant(method = "attackEntityFrom", constant = @Constant(floatValue = 35.0F, ordinal = 1))
     private float changeDamageReduction(float damage) {
         return FinetuneConfig.Thaumcraft.ELDRITCH_BOSS_DAMAGE_CAP;
     }

@@ -10,6 +10,8 @@ import lotr.common.item.LOTRWeaponStats;
 import net.minecraft.item.Item;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraftforge.common.config.Configuration;
+import thaumcraft.api.aspects.Aspect;
+import thaumcraft.api.aspects.AspectList;
 
 public class FinetuneConfig {
     public static class LOTR {
@@ -38,10 +40,14 @@ public class FinetuneConfig {
     }
 
     public static class Thaumcraft {
+        private static final Aspect ERROR = new Aspect("invalus", 0xFF0000, "4", 1);
+
         public static int ELDRITCH_BOSS_DAMAGE_CAP = 35;
+
+        public static final HashMap<String, Aspect> CUSTOM_ASPECTS = new HashMap<>();
     }
 
-    @RequiresMod(TargetedMod.LOTR)
+    @RequiresMod("lotr")
     private static void addCombatItems(String[] items) {
         for (String entry : items) {
             float speed = Float.parseFloat(entry.replaceAll(".*@", "").replaceAll("_.*", ""));
@@ -60,6 +66,30 @@ public class FinetuneConfig {
         }
     }
 
+    @RequiresMod("Thaumcraft")
+    private static void addCustomAspects(String[] aspects) {
+        for (String entry : aspects) {
+            String name = entry.replaceAll(":.*", "");
+            String[] components = entry.replaceAll(".*:\\{", "").replaceAll("}.*", "").split(",");
+            int colour = Integer.parseInt(entry.replaceAll(".*#", ""), 16);
+
+            int index = 0;
+            Aspect[] compounds = new Aspect[components.length];
+            for (String component : components) {
+                if (Aspect.aspects.containsKey(component)) {
+                    compounds[index] = Aspect.getAspect(component);
+                } else {
+                    FinetuneInit.LOGGER.warn("Invalid aspect name '" + component + "'! Substituting with INVALUS.");
+                    compounds[index] = Thaumcraft.ERROR;
+                }
+            }
+
+            Aspect aspect = new Aspect(name, colour, compounds);
+            Thaumcraft.CUSTOM_ASPECTS.put(name, aspect);
+            FinetuneInit.LOGGER.info("Registered custom aspect '" + name + "'!");
+        }
+    }
+
     @SuppressWarnings("ConstantConditions")
     public static void synchronizeConfiguration(File configFile) {
         Configuration configuration = new Configuration(configFile);
@@ -73,8 +103,8 @@ public class FinetuneConfig {
 
             String[] items = configuration.getStringList("additionalCombatItems", "lotr", new String[]{"minecraft:golden_axe@1.5_1.0"},
                     "List of items to add to the custom LOTR combat system.\n" +
-                            "Format: 'modid:item_name@speedMultiplier_reachMultiplier'\n" +
-                            "Example: 'minecraft:golden_axe@1.5_1.0"
+                    "Format: 'modid:item_name@speedMultiplier_reachMultiplier'\n" +
+                    "Example: 'minecraft:golden_axe@1.5_1.0"
             );
 
             addCombatItems(items);
@@ -95,6 +125,16 @@ public class FinetuneConfig {
         } // Botania stuff
         {
             Thaumcraft.ELDRITCH_BOSS_DAMAGE_CAP = configuration.getInt("eldritchBossDamageCap", "thaumcraft", Thaumcraft.ELDRITCH_BOSS_DAMAGE_CAP, 1, Integer.MAX_VALUE, "Boss damage cap");
+
+            String[] aspects = configuration.getStringList("customAspects", "thaumcraft", new String[0],
+                "===== WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING =====\n" +
+                "If your aspect has no texture, the game WILL crash when trying to render it!!\n" +
+                "===== WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING =====\n\n" +
+                "List of custom aspects to add to Thaumcraft.\n" +
+                "Format: 'aspect_name:{compound,compound,...}#colour\n" +
+                "Example: 'explodus:{perditio,potentia}#FF0000'"
+            );
+            addCustomAspects(aspects);
         } // Thaumcraft stuff
 
         if (configuration.hasChanged()) {
