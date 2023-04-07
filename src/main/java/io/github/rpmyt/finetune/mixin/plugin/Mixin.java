@@ -3,6 +3,7 @@ package io.github.rpmyt.finetune.mixin.plugin;
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
@@ -15,9 +16,11 @@ public enum Mixin {
 
     // Thaum
     CHANGE_ELDRITCH_DAMAGE_CAP("thaumcraft.EldritchBossDamageCapMixin", TargetedMod.THAUMCRAFT),
+    REGISTER_ADDITIONAL_ITEM_ASPECTS("thaumcraft.aspect.ItemAspectRegistryMixin", TargetedMod.THAUMCRAFT),
 
     // Botania
     ;
+
 
     public final String mixinClass;
     public final List<TargetedMod> targetedMods;

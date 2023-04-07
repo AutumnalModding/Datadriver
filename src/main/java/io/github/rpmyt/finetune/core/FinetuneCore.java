@@ -3,6 +3,8 @@ package io.github.rpmyt.finetune.core;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraft.launchwrapper.LaunchClassLoader;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.Field;
 import java.util.Map;
@@ -12,7 +14,7 @@ import java.util.Set;
 @IFMLLoadingPlugin.SortingIndex(1002)
 @IFMLLoadingPlugin.TransformerExclusions("io.github.rpmyt.opinionation.core")
 public class FinetuneCore implements IFMLLoadingPlugin {
-
+    static final Logger LOGGER = LogManager.getLogger("Finetune Core");
     @Override
     public String[] getASMTransformerClass() {
         return new String[]{ASMTransformer.class.getName()};
@@ -49,8 +51,7 @@ public class FinetuneCore implements IFMLLoadingPlugin {
             }
 
             loader.registerTransformer("io.github.rpmyt.finetune.core.ASMTransformer");
-            loader.loadClass("vazkii.botania.api.subtile.SubTileGenerating");
-        } catch (NoSuchFieldException | IllegalAccessException | ClassNotFoundException e) {
+        } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }

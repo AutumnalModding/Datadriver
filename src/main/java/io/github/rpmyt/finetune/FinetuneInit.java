@@ -5,6 +5,7 @@ import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import thaumcraft.api.ThaumcraftApi;
 
 @Mod(modid = FinetuneInit.MODID, version = FinetuneInit.VERSION)
 public class FinetuneInit
@@ -17,5 +18,6 @@ public class FinetuneInit
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         FinetuneConfig.synchronizeConfiguration(event.getSuggestedConfigurationFile());
+
     }
 }

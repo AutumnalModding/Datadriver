@@ -13,20 +13,22 @@ public enum TargetedMod {
     //
 
     // Replace with your injected mods here, but always keep VANILLA:
-    VANILLA("Minecraft", "unused", true),
-    LOTR("The Lord of the Rings Mod", "LOTRMod", false),
-    THAUMCRAFT("Thaumcraft", "Thaumcraft", true),
-    BOTANIA("Botania", "Botania", true),
+    VANILLA("Minecraft", "unused", "unused", true),
+    LOTR("The Lord of the Rings Mod", "lotr", "LOTRMod", false),
+    THAUMCRAFT("Thaumcraft", "Thaumcraft", "Thaumcraft", true),
+    BOTANIA("Botania", "Botania", "Botania", true),
 
     ;
 
     public final String modName;
+    public final String modID;
     public final String jarNamePrefixLowercase;
     // Optional dependencies can be omitted in development. Especially skipping GT5U will drastically speed up your game start!
     public final boolean loadInDevelopment;
 
-    TargetedMod(String modName, String jarNamePrefix, boolean loadInDevelopment) {
+    TargetedMod(String modName, String modID, String jarNamePrefix, boolean loadInDevelopment) {
         this.modName = modName;
+        this.modID = modID;
         this.jarNamePrefixLowercase = jarNamePrefix.toLowerCase();
         this.loadInDevelopment = loadInDevelopment;
     }

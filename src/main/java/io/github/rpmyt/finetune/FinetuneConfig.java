@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.HashMap;
 
 import cpw.mods.fml.common.registry.GameRegistry;
+import io.github.rpmyt.finetune.mixin.plugin.TargetedMod;
+import io.github.rpmyt.finetune.util.RequiresMod;
 import lotr.common.item.LOTRWeaponStats;
 import net.minecraft.item.Item;
 import net.minecraft.launchwrapper.Launch;
@@ -30,11 +32,32 @@ public class FinetuneConfig {
 
         public static class ManaCapacities {
             public static int ARCANE_ROSE = 6000;
+            public static int SPECTROLUS = 8000;
+            public static int NARSLIMMUS = 8000;
         }
     }
 
     public static class Thaumcraft {
         public static int ELDRITCH_BOSS_DAMAGE_CAP = 35;
+    }
+
+    @RequiresMod(TargetedMod.LOTR)
+    private static void addCombatItems(String[] items) {
+        for (String entry : items) {
+            float speed = Float.parseFloat(entry.replaceAll(".*@", "").replaceAll("_.*", ""));
+            float reach = Float.parseFloat(entry.replaceAll(".*_", ""));
+
+            String modID = entry.replaceAll(":.*", "");
+            String itemID = entry.replaceAll(".*:", "").replaceAll("@.*", "");
+
+            Item item = GameRegistry.findItem(modID, itemID);
+
+            if (item != null) {
+                FinetuneInit.LOGGER.info("Registering item '" + modID + ":" + itemID + "' to the LOTR combat system (speed " + speed + "x, reach " + reach + "x)...");
+                LOTRWeaponStats.registerMeleeSpeed(item, speed);
+                LOTRWeaponStats.registerMeleeReach(item, reach);
+            }
+        }
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -54,36 +77,19 @@ public class FinetuneConfig {
                             "Example: 'minecraft:golden_axe@1.5_1.0"
             );
 
-            for (String entry : items) {
-                try {
-                    Launch.classLoader.findClass("LOTRWeaponStats");
-                    float speed = Float.parseFloat(entry.replaceAll(".*@", "").replaceAll("_.*", ""));
-                    float reach = Float.parseFloat(entry.replaceAll(".*_", ""));
-
-                    String modID = entry.replaceAll(":.*", "");
-                    String itemID = entry.replaceAll(".*:", "").replaceAll("@.*", "");
-
-                    Item item = GameRegistry.findItem(modID, itemID);
-
-                    if (item != null) {
-
-                        FinetuneInit.LOGGER.info("Registering item '" + modID + ":" + itemID + "' to the LOTR combat system (speed " + speed + "x, reach " + reach + "x)...");
-                        LOTRWeaponStats.registerMeleeSpeed(item, speed);
-                        LOTRWeaponStats.registerMeleeReach(item, reach);
-                    }
-                } catch (ClassNotFoundException ignored) {}
-            }
+            addCombatItems(items);
         } // LOTR stuff
         {
             Botania.GAIA_DAMAGE_CAP = configuration.getInt("gaiaDamageCap", "botania", Botania.GAIA_DAMAGE_CAP, 1, Integer.MAX_VALUE, "Gaia Guardian damage cap");
             Botania.GAIA_DAMAGE_CAP_CRIT = configuration.getInt("gaiaDamageCapCrit", "botania", Botania.GAIA_DAMAGE_CAP, 1, Integer.MAX_VALUE, "Gaia Guardian damage cap (crits)");
 
             {
+                configuration.addCustomCategoryComment("botania_capacities", "NOTE: One Mana Pool = 1000000 (1 million) mana.");
                 Botania.ManaCapacities.ARCANE_ROSE = configuration.getInt("arcaneRose", "botania_capacities", Botania.ManaCapacities.ARCANE_ROSE, 1, Integer.MAX_VALUE, "Rosa Arcane mana capacity");
             } // Mana capacities
 
             {
-                configuration.addCustomCategoryComment("botaniaGeneration", "NOTE: 'Maximum' values displayed are NOT the true maximums!\nThe true maximum is the mana capacity set in the previous section.");
+                configuration.addCustomCategoryComment("botania_generation", "NOTE: 'Maximum' values displayed are NOT the true maximums!\nThe true maximum is the mana capacity set in the previous section.");
                 Botania.GenerationAmounts.ARCANE_ROSE = configuration.getInt("arcaneRose", "botania_generation", Botania.GenerationAmounts.ARCANE_ROSE, 1, Botania.ManaCapacities.ARCANE_ROSE, "Rosa Arcana mana generation per experience point");
             } // Generation amounts
         } // Botania stuff
