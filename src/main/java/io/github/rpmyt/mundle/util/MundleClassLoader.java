@@ -1,11 +1,13 @@
 package io.github.rpmyt.mundle.util;
 
+import net.minecraft.launchwrapper.Launch;
+
 import java.util.HashMap;
 
 public class MundleClassLoader extends ClassLoader {
     private static final HashMap<String, Class<?>> LOADED = new HashMap<>();
 
-    public static final MundleClassLoader INSTANCE = new MundleClassLoader(getSystemClassLoader());
+    public static final MundleClassLoader INSTANCE = new MundleClassLoader(Launch.classLoader);
 
     protected MundleClassLoader(ClassLoader parent) {
         super(parent);

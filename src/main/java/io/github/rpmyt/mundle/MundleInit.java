@@ -9,7 +9,6 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
 import io.github.rpmyt.mundle.util.Mundle;
 import io.github.rpmyt.mundle.util.MundleClassLoader;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemArmor;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraft.util.ResourceLocation;
@@ -22,6 +21,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.LdcInsnNode;
+import org.objectweb.asm.tree.MethodNode;
 import thaumcraft.api.IRunicArmor;
 import thaumcraft.api.IVisDiscountGear;
 import thaumcraft.api.aspects.Aspect;
@@ -30,6 +30,7 @@ import vazkii.botania.api.mana.IManaDiscountArmor;
 import vazkii.botania.api.mana.IManaUsingItem;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -71,8 +72,8 @@ public class MundleInit {
                 switch (container.getModId()) {
                     case "Thaumcraft": {
                         COMPONENTS.put(new ImmutablePair<>(new ResourceLocation("mundle", "thaumcraft"), "aspect"), Aspect.class);
-                        COMPONENTS.put(new ImmutablePair<>(new ResourceLocation("mundle", "thaumcraft"), "shielding"), IRunicArmor.class);
-                        COMPONENTS.put(new ImmutablePair<>(new ResourceLocation("mundle", "thaumcraft"), "vis_armor"), IVisDiscountGear.class);
+                        COMPONENTS.put(new ImmutablePair<>(new ResourceLocation("mundle", "thaumcraft"), "runic_armor"), IRunicArmor.class);
+                        COMPONENTS.put(new ImmutablePair<>(new ResourceLocation("mundle", "thaumcraft"), "vis_discount"), IVisDiscountGear.class);
                     }
 
                     case "Botania": {
@@ -172,6 +173,9 @@ public class MundleInit {
                                     String material = "CLOTH";
                                     String slot = "0";
                                     String render = "3";
+                                    String runicShielding = "0";
+                                    String visDiscount = "0";
+                                    String manaDiscount = "0";
                                     for (String line : feature.contents) {
                                         String value = line.replaceAll(".*=", "");
                                         switch (line.replaceAll("=.*", "")) {
@@ -189,34 +193,70 @@ public class MundleInit {
                                                 render = value;
                                                 break;
                                             }
+
+                                            case "SHIELDING": {
+                                                runicShielding = value;
+                                                break;
+                                            }
+
+                                            case "VIS_DISCOUNT": {
+                                                visDiscount = value;
+                                                break;
+                                            }
+
+                                            case "MANA_DISCOUNT": {
+                                                manaDiscount = value;
+                                                break;
+                                            }
                                         }
                                     }
 
-                                    InsnList list = new InsnList();
+                                    ArrayList<String> toRemove = new ArrayList<>();
 
-                                    String __REPLACEMENT_1 = material;
-                                    String __REPLACEMENT_2 = render;
-                                    String __REPLACEMENT_3 = slot;
+                                    node.interfaces.iterator().forEachRemaining(iface -> {
+                                        boolean matches = false;
+                                        for (Class<?> clazz : interfaces) {
+                                            if (clazz.getName().equals(iface)) {
+                                                matches = true;
+                                                break;
+                                            }
+                                        }
+                                        if (!matches) {
+                                            toRemove.add(iface);
+                                        }
+                                    });
+
+                                    for (String iface : toRemove) {
+                                        node.interfaces.remove(iface);
+                                    }
+
+                                    String __MATERIAL = material;
+                                    String __RENDER_INDEX = render;
+                                    String __SLOT = slot;
+                                    String __RUNIC_CHARGE = runicShielding;
+                                    String __VIS_DISCOUNT = visDiscount;
+                                    String __MANA_DISCOUNT = manaDiscount;
                                     node.name = ("generated_" + String.valueOf((mundle.ident + ":" + feature.ident).hashCode()).replace("-", ""));
-                                    node.methods.forEach(method -> {
+                                    for (MethodNode method : node.methods) {
+                                        InsnList list = new InsnList();
                                         if (method.name.contains("init")) {
                                             method.instructions.iterator().forEachRemaining(instruction -> {
                                                 if (instruction.getOpcode() == Opcodes.LDC) {
                                                     LdcInsnNode ldc = (LdcInsnNode) instruction;
                                                     if (ldc.cst instanceof String) {
                                                         switch ((String) ldc.cst) {
-                                                            case "__REPLACEME_01": {
-                                                                ldc = new LdcInsnNode(__REPLACEMENT_1);
+                                                            case "__MATERIAL": {
+                                                                ldc = new LdcInsnNode(__MATERIAL);
                                                                 break;
                                                             }
 
-                                                            case "__REPLACEME_02": {
-                                                                ldc = new LdcInsnNode(__REPLACEMENT_2);
+                                                            case "__RENDER_INDEX": {
+                                                                ldc = new LdcInsnNode(__RENDER_INDEX);
                                                                 break;
                                                             }
 
-                                                            case "__REPLACEME_03": {
-                                                                ldc = new LdcInsnNode(__REPLACEMENT_3);
+                                                            case "__SLOT": {
+                                                                ldc = new LdcInsnNode(__SLOT);
                                                                 break;
                                                             }
                                                         }
@@ -226,19 +266,66 @@ public class MundleInit {
                                                     list.add(instruction);
                                                 }
                                             });
+                                        }
+
+                                        switch (method.name) {
+                                            case "getRunicCharge": {
+                                                method.instructions.iterator().forEachRemaining(instruction -> {
+                                                    if (instruction.getOpcode() == Opcodes.LDC) {
+                                                        LdcInsnNode ldc = new LdcInsnNode(__RUNIC_CHARGE);
+                                                        list.add(ldc);
+                                                    } else {
+                                                        list.add(instruction);
+                                                    }
+                                                });
+                                                break;
+                                            }
+
+                                            case "getVisDiscount": {
+                                                method.instructions.iterator().forEachRemaining(instruction -> {
+                                                    if (instruction.getOpcode() == Opcodes.LDC) {
+                                                        LdcInsnNode ldc = new LdcInsnNode(__VIS_DISCOUNT);
+                                                        list.add(ldc);
+                                                    } else {
+                                                        list.add(instruction);
+                                                    }
+                                                });
+                                                break;
+                                            }
+
+                                            case "getDiscount": {
+                                                method.instructions.iterator().forEachRemaining(instruction -> {
+                                                    if (instruction.getOpcode() == Opcodes.LDC) {
+                                                        LdcInsnNode ldc = new LdcInsnNode(__MANA_DISCOUNT);
+                                                        list.add(ldc);
+                                                    } else {
+                                                        list.add(instruction);
+                                                    }
+                                                });
+                                                break;
+                                            }
+                                        }
+
+                                        if (list.size() > 0) {
                                             method.instructions.clear();
                                             method.instructions.insert(list);
                                         }
-                                    });
+                                    }
                                     node.accept(writer);
+                                    File file = File.createTempFile("generated_class_", node.name.hashCode() + ".class");
+                                    try (FileOutputStream out = new FileOutputStream(file)) {
+                                        out.write(writer.toByteArray());
+                                        out.flush();
+                                        System.out.println("Dumped class file to " + file.getPath());
+                                    }
 
+                                    //noinspection unchecked
                                     Class<ItemArmor> clazz = (Class<ItemArmor>) MundleClassLoader.INSTANCE.load(node.name, writer.toByteArray());
 
                                     try {
                                         Constructor<ItemArmor> constructor = clazz.getDeclaredConstructor();
 
                                         ItemArmor instance = constructor.newInstance();
-                                        System.out.println("Instance superclass: " + instance.getClass().getSuperclass().getName());
                                         GameRegistry.registerItem(instance, feature.ident);
                                     } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException exception) {
                                         LOGGER.error("Unable to load feature '" + mundle.ident + ":" + feature.ident + "'!");
