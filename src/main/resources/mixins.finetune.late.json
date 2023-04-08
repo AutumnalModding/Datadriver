@@ -1,8 +1,0 @@
-{
-  "required": true,
-  "minVersion": "0.8.3-GTNH",
-  "package": "io.github.rpmyt.finetune.mixin.mixins.late",
-  "refmap": "mixins.hodgepodge.refmap.json",
-  "target": "@env(DEFAULT)",
-  "compatibilityLevel": "JAVA_8"
-}

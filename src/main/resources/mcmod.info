@@ -1,7 +1,7 @@
 [
 {
-  "modid": "finetune",
-  "name": "Finetune",
+  "modid": "mundle",
+  "name": "Mundle",
   "description": "Configurate ALL the things.",
   "version": "1.0",
   "mcversion": "1.7.10",

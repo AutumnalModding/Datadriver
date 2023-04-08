@@ -582,6 +582,7 @@ dependencies {
     implementation files("mods/lotr.jar")
     implementation files("mods/thaumcraft.jar")
     implementation files("mods/botania.jar")
+    implementation files("mods/tinkers.jar")
 }
 
 pluginManager.withPlugin('org.jetbrains.kotlin.kapt') {
