@@ -1,8 +1,8 @@
 [
 {
-  "modid": "mundle",
-  "name": "Mundle",
-  "description": "Configurate ALL the things.",
+  "modid": "datadriver",
+  "name": "Datadriver",
+  "description": "Oops! All JSON!",
   "version": "1.0",
   "mcversion": "1.7.10",
   "url": "",
