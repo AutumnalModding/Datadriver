@@ -13,6 +13,14 @@ public class ItemData extends GenericData {
     public ArrayList<TemplateData> extensions = new ArrayList<>();
     public HashMap<String, String> replacements = new HashMap<>();
 
+    public ItemData(GenericData parent) {
+        this.data = parent.data;
+        this.name = parent.name;
+        this.type = parent.type;
+        this.identifier = parent.identifier;
+        this.init();
+    }
+
     public void init() {
         for (Map.Entry<String, JsonElement> entry : this.data.entrySet()) {
             switch (entry.getKey()) {

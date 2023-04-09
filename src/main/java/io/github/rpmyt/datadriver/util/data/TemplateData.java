@@ -16,6 +16,14 @@ public class TemplateData extends GenericData {
     public ArrayList<String> requiredMods = new ArrayList<>();
     public HashMap<String, String> placeholders = new HashMap<>();
 
+    public TemplateData(GenericData parent) {
+        this.data = parent.data;
+        this.name = parent.name;
+        this.type = parent.type;
+        this.identifier = parent.identifier;
+        this.init();
+    }
+
     public void init() {
         for (Entry<String,JsonElement> entry : this.data.entrySet()) {
             switch (entry.getKey()) {

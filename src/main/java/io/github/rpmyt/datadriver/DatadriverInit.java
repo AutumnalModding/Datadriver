@@ -86,8 +86,8 @@ public class DatadriverInit {
                                 switch (current) {
                                     case "templates": {
                                         try {
-                                            TemplateData template = gson.fromJson(new JsonReader(new FileReader(json)), GenericData.class);
-                                            template.init();
+                                            GenericData generic = gson.fromJson(new JsonReader(new FileReader(json)), GenericData.class);
+                                            TemplateData template = new TemplateData(generic);
                                             if (template.type.equals("template")) {
                                                 if (template.loaded) {
                                                     TEMPLATES.put(new ResourceLocation(ident, template.identifier), template);
@@ -104,8 +104,8 @@ public class DatadriverInit {
 
                                     case "items": {
                                         try {
-                                            ItemData item = gson.fromJson(new JsonReader(new FileReader(json)), GenericData.class);
-                                            item.init();
+                                            GenericData generic = gson.fromJson(new JsonReader(new FileReader(json)), GenericData.class);
+                                            ItemData item = new ItemData(generic);
                                             if (item.type.equals("item")) {
                                                 if (item.loaded) {
                                                     class GeneratedItem extends Object {}
