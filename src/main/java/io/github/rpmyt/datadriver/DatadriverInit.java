@@ -1,7 +1,10 @@
 package io.github.rpmyt.datadriver;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.MalformedJsonException;
+
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
@@ -44,16 +47,19 @@ public class DatadriverInit {
         for (File pkg : config.listFiles()) {
             if (pkg.isDirectory()) {
                 for (File contents : pkg.listFiles()) {
-                    String ident = "datadriver_bundle_" + ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE);
+                    String ident = null;
                     if (contents.getName().equalsIgnoreCase("package.json")) {
                         Gson gson = new Gson();
                         try {
-                            DataItem item = gson.fromJson(new JsonReader(new FileReader(contents)), DataItem.class);
+                            JsonReader reader = new JsonReader(new FileReader(contents));
+                            reader.setLenient(true);
+                            DataItem item = gson.fromJson(reader, DataItem.class);
                             BUNDLES.put(new ResourceLocation(item.identifier, "bundle_data"), item);
                             ident = item.identifier;
                             LOGGER.info("Loading bundle '" + item.name + "'!");
-                        } catch (IOException exception) {
-                            exception.printStackTrace();
+                        } catch (IOException | JsonSyntaxException exception) {
+                            LOGGER.error("Failed to load package.json for bundle '" + pkg.getName() + "'!! Skipping it.");
+                            continue;
                         }
                     } else if (contents.isDirectory()) {
                         for (File json : contents.listFiles()) {
@@ -64,8 +70,12 @@ public class DatadriverInit {
                                         DataItem item = gson.fromJson(new JsonReader(new FileReader(json)), DataItem.class);
                                         if (item.type.equals("template")) {
                                             Template template = new Template(item);
-                                            TEMPLATES.put(new ResourceLocation(ident, template.identifier), template);
-                                            LOGGER.info("Loaded template '" + ident + ":" + template.identifier + "'!");
+                                            if (template.loaded) {
+                                                TEMPLATES.put(new ResourceLocation(ident, template.identifier), template);
+                                                LOGGER.info("Loaded template '" + ident + ":" + template.identifier + "'!");
+                                            } else {
+                                                LOGGER.error("Failed to load template " + ident + ":" + template.identifier + "'!");
+                                            }
                                         }
                                     } catch (IOException exception) {
                                         exception.printStackTrace();

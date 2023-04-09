@@ -16,15 +16,17 @@ public class Template extends DataItem {
     public ArrayList<String> requiredMods = new ArrayList<>();
     public HashMap<String, String> placeholders = new HashMap<>();
 
+    public final boolean loaded;
+
     public Template(DataItem parent) {
         this.data = parent.data;
         this.name = parent.name;
         this.identifier = parent.identifier;
         this.type = parent.type;
-        this.init();
+        this.loaded = this.init();
     }
     
-    public void init() {
+    public boolean init() {
         for (Entry<String,JsonElement> entry : this.data.entrySet()) {
             switch (entry.getKey()) {
                 case "mods": {
@@ -46,6 +48,7 @@ public class Template extends DataItem {
                             this.superclass = Class.forName(desc);
                         } catch (ClassNotFoundException exception) {
                             DatadriverInit.LOGGER.error("Unable to load superclass '" + desc + "'!");
+                            return false;
                         }
                     }
                     break;
@@ -80,5 +83,7 @@ public class Template extends DataItem {
                 }
             }
         }
+
+        return true;
     }
 }
