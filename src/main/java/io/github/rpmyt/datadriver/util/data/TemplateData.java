@@ -10,23 +10,13 @@ import io.github.rpmyt.datadriver.DatadriverInit;
 
 import java.util.Map.Entry;
 
-public class Template extends DataItem {
+public class TemplateData extends GenericData {
     public Class<?> superclass;
     public HashMap<String, ArrayList<String>> methods = new HashMap<>();
     public ArrayList<String> requiredMods = new ArrayList<>();
     public HashMap<String, String> placeholders = new HashMap<>();
 
-    public final boolean loaded;
-
-    public Template(DataItem parent) {
-        this.data = parent.data;
-        this.name = parent.name;
-        this.identifier = parent.identifier;
-        this.type = parent.type;
-        this.loaded = this.init();
-    }
-    
-    public boolean init() {
+    public void init() {
         for (Entry<String,JsonElement> entry : this.data.entrySet()) {
             switch (entry.getKey()) {
                 case "mods": {
@@ -48,7 +38,8 @@ public class Template extends DataItem {
                             this.superclass = Class.forName(desc);
                         } catch (ClassNotFoundException exception) {
                             DatadriverInit.LOGGER.error("Unable to load superclass '" + desc + "'!");
-                            return false;
+                            this.loaded = false;
+                            return;
                         }
                     }
                     break;
@@ -84,6 +75,6 @@ public class Template extends DataItem {
             }
         }
 
-        return true;
+        this.loaded = true;
     }
 }

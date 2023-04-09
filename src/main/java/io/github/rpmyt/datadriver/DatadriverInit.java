@@ -3,21 +3,34 @@ package io.github.rpmyt.datadriver;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.MalformedJsonException;
-
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import io.github.rpmyt.datadriver.util.data.DataItem;
-import io.github.rpmyt.datadriver.util.data.Template;
-import io.netty.util.internal.ThreadLocalRandom;
+import io.github.rpmyt.datadriver.util.data.GenericData;
+import io.github.rpmyt.datadriver.util.data.ItemData;
+import io.github.rpmyt.datadriver.util.data.TemplateData;
+import net.minecraft.launchwrapper.Launch;
 import net.minecraft.util.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.InsnNode;
+import org.objectweb.asm.tree.LdcInsnNode;
+import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.VarInsnNode;
+
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Mod(modid = DatadriverInit.MODID, version = DatadriverInit.VERSION)
 public class DatadriverInit {
@@ -26,10 +39,13 @@ public class DatadriverInit {
 
     public static final Logger LOGGER = LogManager.getLogger("Datadriver");
 
-    private static final HashMap<ResourceLocation, DataItem> BUNDLES = new HashMap<>();
-    private static final HashMap<ResourceLocation, Template> TEMPLATES = new HashMap<>();
+    private static final HashMap<ResourceLocation, GenericData> BUNDLES = new HashMap<>();
+    public static final HashMap<ResourceLocation, TemplateData> TEMPLATES = new HashMap<>();
+
+    public static final String[] LOAD_ORDER;
 
     @EventHandler
+    @SuppressWarnings("ConstantConditions")
     public void preInit(FMLPreInitializationEvent event) {
         File config = new File(event.getModConfigurationDirectory().getPath() + "/datadriver/");
         if (!config.exists()) {
@@ -44,16 +60,16 @@ public class DatadriverInit {
             throw new IllegalStateException("DataDriver initialization failed!!");
         }
 
+        Gson gson = new Gson();
         for (File pkg : config.listFiles()) {
             if (pkg.isDirectory()) {
                 for (File contents : pkg.listFiles()) {
                     String ident = null;
                     if (contents.getName().equalsIgnoreCase("package.json")) {
-                        Gson gson = new Gson();
                         try {
                             JsonReader reader = new JsonReader(new FileReader(contents));
                             reader.setLenient(true);
-                            DataItem item = gson.fromJson(reader, DataItem.class);
+                            GenericData item = gson.fromJson(reader, GenericData.class);
                             BUNDLES.put(new ResourceLocation(item.identifier, "bundle_data"), item);
                             ident = item.identifier;
                             LOGGER.info("Loading bundle '" + item.name + "'!");
@@ -61,24 +77,134 @@ public class DatadriverInit {
                             LOGGER.error("Failed to load package.json for bundle '" + pkg.getName() + "'!! Skipping it.");
                             continue;
                         }
-                    } else if (contents.isDirectory()) {
-                        for (File json : contents.listFiles()) {
-                            switch (contents.getName()) {
-                                case "templates": {
-                                    Gson gson = new Gson();
-                                    try {
-                                        DataItem item = gson.fromJson(new JsonReader(new FileReader(json)), DataItem.class);
-                                        if (item.type.equals("template")) {
-                                            Template template = new Template(item);
-                                            if (template.loaded) {
-                                                TEMPLATES.put(new ResourceLocation(ident, template.identifier), template);
-                                                LOGGER.info("Loaded template '" + ident + ":" + template.identifier + "'!");
-                                            } else {
-                                                LOGGER.error("Failed to load template " + ident + ":" + template.identifier + "'!");
+                    }
+
+                    for (String current : LOAD_ORDER) {
+                        File directory = new File(pkg.toPath() + "/" + current);
+                        if (directory.exists() && directory.isDirectory()) {
+                            for (File json : directory.listFiles()) {
+                                switch (current) {
+                                    case "templates": {
+                                        try {
+                                            TemplateData template = gson.fromJson(new JsonReader(new FileReader(json)), GenericData.class);
+                                            template.init();
+                                            if (template.type.equals("template")) {
+                                                if (template.loaded) {
+                                                    TEMPLATES.put(new ResourceLocation(ident, template.identifier), template);
+                                                    LOGGER.info("Loaded template '" + ident + ":" + template.identifier + "'!");
+                                                } else {
+                                                    LOGGER.error("Failed to load template " + ident + ":" + template.identifier + "'!");
+                                                }
                                             }
+                                        } catch (IOException exception) {
+                                            exception.printStackTrace();
                                         }
-                                    } catch (IOException exception) {
-                                        exception.printStackTrace();
+                                        break;
+                                    }
+
+                                    case "items": {
+                                        try {
+                                            ItemData item = gson.fromJson(new JsonReader(new FileReader(json)), GenericData.class);
+                                            item.init();
+                                            if (item.type.equals("item")) {
+                                                if (item.loaded) {
+                                                    class GeneratedItem extends Object {}
+                                                    Class<GeneratedItem> clazz = GeneratedItem.class;
+
+                                                    ClassNode node = new ClassNode(Opcodes.ASM5);
+                                                    ClassReader reader = new ClassReader(Launch.classLoader.getClassBytes(clazz.getName()));
+                                                    ClassWriter writer = new ClassWriter(0);
+
+                                                    reader.accept(node, 0);
+                                                    node.superName = item.main.superclass.getName().replaceAll("\\.", "/");
+                                                    item.main.methods.forEach((desc, bytecode) -> {
+                                                        InsnList list = new InsnList();
+                                                        for (String insn : bytecode) {
+                                                            String name = insn.replaceAll(" .*", "");
+                                                            String argument = insn.replaceAll(".* ", "");
+
+                                                            Class<Opcodes> opcodes = Opcodes.class;
+                                                            try {
+                                                                Field field = opcodes.getField(name);
+                                                                Object value = field.get(null);
+                                                                if (value instanceof Integer) {
+                                                                    int code = (int) value;
+                                                                    AbstractInsnNode instruction;
+                                                                    switch (code) {
+                                                                        case Opcodes.LDC: {
+                                                                            instruction = new LdcInsnNode(argument);
+                                                                            break;
+                                                                        }
+
+                                                                        case Opcodes.INVOKESPECIAL:
+                                                                        case Opcodes.INVOKESTATIC:
+                                                                        case Opcodes.INVOKEVIRTUAL:
+                                                                        case Opcodes.INVOKEINTERFACE: {
+                                                                            /*
+                                                                            Example:
+                                                                            ItemArmor#getArmorTexture(Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/Entity;ILjava/lang/String;)Ljava/lang/String;
+                                                                             */
+                                                                            String method = argument.replaceAll(".*\\.", "").replaceAll("\\(.*", "");
+                                                                            String owner = argument.replaceAll("\\..*", "");
+                                                                            String description = argument.replaceAll(".*\\(", "(");
+                                                                            instruction = new MethodInsnNode(code, owner, method, description, item.main.superclass.isInterface());
+                                                                            break;
+                                                                        }
+                                                                        
+                                                                        case Opcodes.ALOAD:
+                                                                        case Opcodes.ILOAD:
+                                                                        case Opcodes.LLOAD:
+                                                                        case Opcodes.DLOAD:
+                                                                        case Opcodes.FLOAD:
+                                                                        case Opcodes.ASTORE:
+                                                                        case Opcodes.ISTORE:
+                                                                        case Opcodes.LSTORE:
+                                                                        case Opcodes.DSTORE:
+                                                                        case Opcodes.FSTORE:
+                                                                        case Opcodes.RET: {
+                                                                            instruction = new VarInsnNode(code, Integer.parseInt(argument));
+                                                                            break;
+                                                                        }
+
+                                                                        default: {
+                                                                            instruction = new InsnNode(code);
+                                                                        }
+                                                                    }
+                                                                    list.add(instruction);
+                                                                } else {
+                                                                    // What the fuck?
+                                                                    LOGGER.fatal("Something has gone very wrong...");
+                                                                    LOGGER.fatal("Opcodes." + field + " isn't an int???");
+                                                                }
+                                                            } catch (NoSuchFieldException exception) {
+                                                                LOGGER.fatal("Invalid opcode '" + name + "'!!");
+                                                                LOGGER.fatal("=== CRITICAL CRITICAL CRITICAL CRITICAL CRITICAL CRITICAL CRITICAL CRITICAL ===");
+                                                                LOGGER.fatal("ENTERING INVALID BYTECODE WATERS! ABANDON SHIP, ALL HOPE IS LOST!");
+                                                                LOGGER.fatal("(The game is HIGHLY LIKELY to crash from this point on. YOU'VE BEEN WARNED!");
+                                                                LOGGER.fatal("=== CRITICAL CRITICAL CRITICAL CRITICAL CRITICAL CRITICAL CRITICAL CRITICAL ===");
+                                                            } catch (IllegalAccessException exception) {
+                                                                exception.printStackTrace();
+                                                            }
+                                                        }
+                                                    });
+
+                                                    for (TemplateData template : item.extensions) {
+                                                        node.interfaces.add(template.superclass.getName().replaceAll("\\.", "/"));
+                                                        template.methods.forEach((desc, bytecode) -> {
+
+                                                        });
+                                                    }
+
+                                                    node.accept(writer);
+                                                    try (FileOutputStream out = new FileOutputStream(File.createTempFile("generated_", String.valueOf(ThreadLocalRandom.current().nextInt(Integer.MAX_VALUE))))) {
+                                                        out.write(writer.toByteArray());
+                                                        out.flush();
+                                                    }
+                                                }
+                                            }
+                                        } catch (IOException exception) {
+                                            exception.printStackTrace();
+                                        }
                                     }
                                 }
                             }
@@ -338,5 +464,21 @@ public class DatadriverInit {
         //         LOGGER.warn("Failed to read Mundle file '" + bundle.getName() + "'. Skipping it.");
         //     }
         // }
+    }
+
+    static {
+        LOAD_ORDER = new String[11];
+
+        LOAD_ORDER[0] = "templates";
+        LOAD_ORDER[1] = "models";
+        LOAD_ORDER[2] = "items";
+        LOAD_ORDER[3] = "blocks";
+        LOAD_ORDER[4] = "materials";
+        LOAD_ORDER[5] = "armor";
+        LOAD_ORDER[6] = "tools";
+        LOAD_ORDER[7] = "potions";
+        LOAD_ORDER[8] = "entities";
+        LOAD_ORDER[9] = "recipes";
+        LOAD_ORDER[10] = "achievements";
     }
 }
