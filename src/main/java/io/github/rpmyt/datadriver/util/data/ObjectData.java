@@ -1,6 +1,7 @@
 package io.github.rpmyt.datadriver.util.data;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonPrimitive;
 import io.github.rpmyt.datadriver.DatadriverInit;
 import net.minecraft.util.ResourceLocation;
 
@@ -8,12 +9,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ItemData extends GenericData {
+public class ObjectData extends GenericData {
     public TemplateData main;
     public ArrayList<TemplateData> extensions = new ArrayList<>();
-    public HashMap<String, String> replacements = new HashMap<>();
+    public HashMap<String, JsonPrimitive> replacements = new HashMap<>();
 
-    public ItemData(GenericData parent) {
+    public ObjectData(GenericData parent) {
         this.data = parent.data;
         this.name = parent.name;
         this.type = parent.type;
@@ -48,6 +49,17 @@ public class ItemData extends GenericData {
                                 this.extensions.add(template);
                             }
                         }
+                    }
+                    break;
+                }
+
+                case "replacements": {
+                    if (entry.getValue().isJsonObject()) {
+                        entry.getValue().getAsJsonObject().entrySet().forEach(replacement -> {
+                            if (replacement.getValue().isJsonPrimitive()) {
+                                replacements.put(replacement.getKey(), replacement.getValue().getAsJsonPrimitive());
+                            }
+                        });
                     }
                     break;
                 }

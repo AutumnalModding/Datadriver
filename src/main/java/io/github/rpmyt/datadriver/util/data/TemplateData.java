@@ -63,7 +63,7 @@ public class TemplateData extends GenericData {
                                         bytecode.add(instruction.getAsJsonPrimitive().getAsString());
                                     }
                                 });
-                                methods.put(entry.getKey(), bytecode);
+                                methods.put(method.getKey(), bytecode);
                             }
                         });
                     }
@@ -74,7 +74,7 @@ public class TemplateData extends GenericData {
                     if (entry.getValue().isJsonObject()) {
                         entry.getValue().getAsJsonObject().entrySet().forEach(placeholder -> {
                             if (placeholder.getValue().isJsonPrimitive() && placeholder.getValue().getAsJsonPrimitive().isString()) {
-                                placeholders.put(entry.getKey(), placeholder.getValue().getAsJsonPrimitive().getAsString());
+                                placeholders.put(placeholder.getKey(), placeholder.getValue().getAsJsonPrimitive().getAsString());
                             }
                         });
                     }

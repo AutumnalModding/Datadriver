@@ -13,6 +13,4 @@ public class GenericData {
     public GenericData() {
         this.loaded = false;
     }
-
-    public void init() {}
 }
